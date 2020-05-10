@@ -379,6 +379,7 @@ func SplitString(s string, n int) []string {
 func main() {
 	flag.Parse()
 
+	log.Printf("In main()")
 	content, err := ioutil.ReadFile(*config_path)
 	if err != nil {
 		log.Fatalf("Problem reading configuration file: %v", err)
@@ -396,10 +397,14 @@ func main() {
 		cfg.SplitMessageBytes = 4000
 	}
 
+	log.Printf("Creating BotApi %s", cfg.TelegramToken)
 	bot_tmp, err := tgbotapi.NewBotAPI(cfg.TelegramToken)
+
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Printf("Created BotApi")
 
 	bot = bot_tmp
 	if *debug {
@@ -493,19 +498,26 @@ func AlertFormatStandard(alerts Alerts) string {
 
 	alertDetails := make([]string, len(alerts.Alerts))
 	for i, a := range alerts.Alerts {
+	    alertDetails[i] += fmt.Sprintf("Alert %d - ", i)
+		if alertname, ok := a.Labels["alertname"]; ok {
+			alertDetails[i] += fmt.Sprintf("%s - ", alertname)
+		}
+		if severity, ok := a.Labels["severity"]; ok {
+			alertDetails[i] += fmt.Sprintf("%s - ", severity)
+		}
 		if instance, ok := a.Labels["instance"]; ok {
 			instanceString, _ := instance.(string)
 			alertDetails[i] += strings.Split(instanceString, ":")[0]
 		}
 		if job, ok := a.Labels["job"]; ok {
-			alertDetails[i] += fmt.Sprintf("[%s]", job)
+			alertDetails[i] += fmt.Sprintf(" [%s]", job)
 		}
 		if a.GeneratorURL != "" {
 			alertDetails[i] = fmt.Sprintf("<a href='%s'>%s</a>", a.GeneratorURL, alertDetails[i])
 		}
 	}
 	return fmt.Sprintf(
-		"<a href='%s/#/alerts?receiver=%s'>[%s:%d]</a>\ngrouped by: %s\nlabels: %s%s\n%s",
+		"<a href='%s/#/alerts?receiver=%s'>[%s:%d]</a>\nGrouped by: %s\nLabels: %s%s\n\n%s",
 		alerts.ExternalURL,
 		alerts.Receiver,
 		strings.ToUpper(alerts.Status),
@@ -513,7 +525,7 @@ func AlertFormatStandard(alerts Alerts) string {
 		strings.Join(groupLabels, ", "),
 		strings.Join(commonLabels, ", "),
 		strings.Join(commonAnnotations, ""),
-		strings.Join(alertDetails, ", "),
+		strings.Join(alertDetails, "\n"),
 	)
 }
 
