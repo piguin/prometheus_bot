@@ -499,6 +499,11 @@ func AlertFormatStandard(alerts Alerts) string {
 	alertDetails := make([]string, len(alerts.Alerts))
 	for i, a := range alerts.Alerts {
 	    alertDetails[i] += fmt.Sprintf("Alert %d - ", i)
+		if a.GeneratorURL != "" {
+			alertDetails[i] = fmt.Sprintf("<a href='%s'>Alert %d</a> - ", a.GeneratorURL, i)
+		} else {
+	        alertDetails[i] = fmt.Sprintf("Alert %d - ", i)
+        }
 		if alertname, ok := a.Labels["alertname"]; ok {
 			alertDetails[i] += fmt.Sprintf("%s - ", alertname)
 		}
@@ -507,13 +512,10 @@ func AlertFormatStandard(alerts Alerts) string {
 		}
 		if instance, ok := a.Labels["instance"]; ok {
 			instanceString, _ := instance.(string)
-			alertDetails[i] += strings.Split(instanceString, ":")[0]
+			alertDetails[i] += fmt.Sprintf("instance=<code>%s</code>", strings.Split(instanceString, ":")[0])
 		}
 		if job, ok := a.Labels["job"]; ok {
-			alertDetails[i] += fmt.Sprintf(" [%s]", job)
-		}
-		if a.GeneratorURL != "" {
-			alertDetails[i] = fmt.Sprintf("<a href='%s'>%s</a>", a.GeneratorURL, alertDetails[i])
+			alertDetails[i] += fmt.Sprintf(" [job=<code>%s</code>]", job)
 		}
 	}
 	return fmt.Sprintf(
