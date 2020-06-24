@@ -394,7 +394,7 @@ func main() {
 	}
 
 	if cfg.SplitMessageBytes == 0 {
-		cfg.SplitMessageBytes = 4000
+		cfg.SplitMessageBytes = 64000
 	}
 
 	log.Printf("Creating BotApi %s", cfg.TelegramToken)
